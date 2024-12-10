@@ -1,6 +1,4 @@
-#ifndef SERVER_H
-#define SERVER_H
-
+/* System Header Files */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,32 +14,75 @@
 #include <netdb.h>
 #include <ctype.h>
 #include <pthread.h>
-#include "list.h"
-#include <strings.h> // For strcasecmp
 
-// Constants
+/* Local Header Files */
+#include "list.h"
+
 #define MAX_READERS 25
 #define TRUE   1  
 #define FALSE  0  
 #define PORT 8888  
-#define delimiters " "
 #define max_clients  30
 #define DEFAULT_ROOM "Lobby"
 #define MAXBUFF   2096
-#define BACKLOG 2 
+#define BACKLOG 2
+#define MAX_NAME_LEN 50
+#define MAX_ROOMS 100
+#define MAX_USERS 100
+#define MAX_DIRECT_CONN 50
 
-// Shared variables
-extern int numReaders;                           // Reader count
-extern pthread_mutex_t mutex;                    // Mutex lock
-extern pthread_mutex_t rw_lock;                  // Read/Write lock
-extern struct node *head;                        // Linked list head for users and rooms
-extern const char *server_MOTD;                  // Message of the day
+typedef struct DirectConn {
+    char username[MAX_NAME_LEN];
+    struct DirectConn *next;
+} DirectConn;
 
-// Function prototypes
+typedef struct User {
+    int socket;
+    char username[MAX_NAME_LEN];
+    // A linked list of rooms the user belongs to
+    struct RoomList *rooms; 
+    // A linked list of direct connections (DMs)
+    DirectConn *directConns;
+    struct User *next;
+} User;
+
+typedef struct RoomUser {
+    char username[MAX_NAME_LEN];
+    struct RoomUser *next;
+} RoomUser;
+
+typedef struct Room {
+    char name[MAX_NAME_LEN];
+    RoomUser *users;  
+    struct Room *next;
+} Room;
+
+extern User *user_head;
+extern Room *room_head;
+extern const char *delimiters;
+
+// prototypes
+
 int get_server_socket();
 int start_server(int serv_socket, int backlog);
 int accept_client(int serv_sock);
 void sigintHandler(int sig_num);
 void *client_receive(void *ptr);
 
-#endif
+// Stubs for all required functions referenced in server.c and server_client.c
+void addRoom(const char *roomname);
+void freeAllUsers(User **user_head_ref);
+void freeAllRooms(Room **room_head_ref);
+void addUser(int socket, const char *username);
+void addUserToRoom(const char *username, const char *roomname);
+User *findUserBySocket(int socket);
+Room *findRoomByName(const char *roomname);
+void removeUserFromRoom(const char *username, const char *roomname);
+User *findUserByName(const char *username);
+void addDirectConnection(const char *fromUser, const char *toUser);
+void removeDirectConnection(const char *fromUser, const char *toUser);
+void listAllRooms(int client_socket);
+void listAllUsers(int client_socket, int requesting_socket);
+void renameUser(int socket, const char *newName);
+void removeAllUserConnections(const char *username);
+void removeUser(int socket);

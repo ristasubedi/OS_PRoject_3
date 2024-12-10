@@ -1,51 +1,61 @@
-#include <stdlib.h>
-#include <string.h>
+// Group Members: 
+// Rista Subedi
+// Divya Shrestha
+// Suyog Bala
+// Manushi Khatri
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 #include "list.h"
 
+//insert link at the first location
 struct node* insertFirstU(struct node *head, int socket, char *username) {
-    struct node *link = (struct node *)malloc(sizeof(struct node));
+    
+   if(findU(head,username) == NULL) {
+           
+       //create a link
+       struct node *link = (struct node*) malloc(sizeof(struct node));
 
-    if (link == NULL) {
-        perror("malloc failed");
-        exit(EXIT_FAILURE);
-    }
+       link->socket = socket;
+       strcpy(link->username,username);
+       
+       //point it to old first node
+       link->next = head;
 
-    link->socket = socket;
-    strcpy(link->username, username);
-
-    link->next = head; // Point it to the old first node
-    return link;       // Return the new head
+       //point first to new first node
+       head = link;
+ 
+   }
+   else
+       printf("Duplicate: %s\n", username);
+   return head;
 }
 
+//find a link with given user
 struct node* findU(struct node *head, char* username) {
-    struct node *current = head;
 
-    while (current != NULL && strcmp(current->username, username) != 0) {
-        current = current->next; // Go to next link
-    }
+   //start from the first link
+   struct node* current = head;
 
-    return current; // Returns NULL if not found
-}
+   //if list is empty
+   if(head == NULL) {
+      return NULL;
+   }
 
-struct node* removeNodeU(struct node *head, char *username) {
-    struct node *current = head, *previous = NULL;
-
-    while (current != NULL && strcmp(current->username, username) != 0) {
-        previous = current;
-        current = current->next;
-    }
-
-    if (current == NULL) {
-        return head; // Node not found
-    }
-
-    if (previous == NULL) {
-        head = current->next; // Remove the first node
-    } else {
-        previous->next = current->next; // Bypass the current node
-    }
-
-    free(current); // Free the removed node
-    return head;
+   //navigate through list
+    while(strcmp(current->username, username) != 0) {
+	
+      //if it is last node
+      if(current->next == NULL) {
+         return NULL;
+      } else {
+         //go to next link
+         current = current->next;
+      }
+   }      
+	
+   //if username found, return the current Link
+   return current;
 }
